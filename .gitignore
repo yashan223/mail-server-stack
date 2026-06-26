@@ -1,0 +1,20 @@
+# Local environment configuration
+.env
+
+# SSL/TLS Certificates
+ssl/*
+!ssl/.gitkeep
+
+# Dovecot user credentials
+dovecot/passwd
+!dovecot/.gitkeep
+
+# OpenDKIM keys and configs
+opendkim/keys/*
+!opendkim/keys/.gitkeep
+
+# Temporary/OS files
+.DS_Store
+Thumbs.db
+*~
+*.log

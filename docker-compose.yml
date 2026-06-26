@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  postfix:
+    build:
+      context: ./postfix
+    container_name: mail-postfix
+    restart: unless-stopped
+    hostname: ${HOSTNAME:-mail.example.com}
+    domainname: ${DOMAIN:-example.com}
+    ports:
+      - "${PORT_SMTP:-25}:25"
+      - "${PORT_SMTPS:-465}:465"
+      - "${PORT_SUBMISSION:-587}:587"
+    environment:
+      - DOMAIN=${DOMAIN:-example.com}
+      - HOSTNAME=${HOSTNAME:-mail.example.com}
+      - TZ=${TZ:-UTC}
+    volumes:
+      - mail-data:/var/mail
+      - dovecot-sockets:/var/run/dovecot
+      - ./ssl:/etc/ssl/mail:ro
+      - ./postfix/virtual_users:/etc/postfix/virtual_users
+    networks:
+      - mail-net
+    depends_on:
+      - dovecot
+      - opendkim
+
+  dovecot:
+    build:
+      context: ./dovecot
+    container_name: mail-dovecot
+    restart: unless-stopped
+    hostname: ${HOSTNAME:-mail.example.com}
+    domainname: ${DOMAIN:-example.com}
+    ports:
+      - "${PORT_IMAP:-143}:143"
+      - "${PORT_IMAPS:-993}:993"
+    environment:
+      - DOMAIN=${DOMAIN:-example.com}
+      - HOSTNAME=${HOSTNAME:-mail.example.com}
+      - TZ=${TZ:-UTC}
+    volumes:
+      - mail-data:/var/mail
+      - dovecot-sockets:/var/run/dovecot
+      - ./dovecot/passwd:/etc/dovecot/passwd
+      - ./ssl:/etc/ssl/mail:ro
+    networks:
+      - mail-net
+
+  opendkim:
+    build:
+      context: ./opendkim
+    container_name: mail-opendkim
+    restart: unless-stopped
+    hostname: ${HOSTNAME:-mail.example.com}
+    domainname: ${DOMAIN:-example.com}
+    environment:
+      - DOMAIN=${DOMAIN:-example.com}
+      - TZ=${TZ:-UTC}
+    volumes:
+      - ./opendkim/keys:/etc/opendkim/keys
+    networks:
+      - mail-net
+
+  webmail:
+    image: roundcube/roundcubemail:latest
+    container_name: mail-webmail
+    restart: unless-stopped
+    ports:
+      - "${PORT_WEBMAIL:-8080}:80"
+    environment:
+      - ROUNDCUBEMAIL_DEFAULT_HOST=dovecot
+      - ROUNDCUBEMAIL_SMTP_SERVER=postfix
+      - ROUNDCUBEMAIL_SMTP_PORT=587
+      - ROUNDCUBEMAIL_DB_TYPE=sqlite
+    volumes:
+      - ./webmail/config.inc.php:/var/www/html/config/config.inc.php:ro
+      - webmail-db:/var/www/html/db
+    networks:
+      - mail-net
+    depends_on:
+      - postfix
+      - dovecot
+
+volumes:
+  mail-data:
+    driver: local
+  dovecot-sockets:
+    driver: local
+  webmail-db:
+    driver: local
+
+networks:
+  mail-net:
+    driver: bridge
