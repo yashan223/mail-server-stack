@@ -16,9 +16,11 @@ if ! getent passwd vmail >/dev/null; then
 fi
 
 echo "Setting permissions on /var/mail to vmail:vmail..."
-mkdir -p /var/mail
+mkdir -p /var/mail/vhosts
 chown -R vmail:vmail /var/mail
-chmod 770 /var/mail
+chmod 770 /var/mail || true
+chown -R vmail:vmail /var/mail/vhosts
+chmod 770 /var/mail/vhosts
 
 SSL_DIR="/etc/ssl/mail"
 if [ -f "${SSL_DIR}/cert.pem" ] && [ -f "${SSL_DIR}/key.pem" ]; then
