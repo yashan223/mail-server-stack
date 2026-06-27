@@ -68,8 +68,6 @@ services:
     image: roundcube/roundcubemail:latest
     container_name: mail-webmail
     restart: unless-stopped
-    ports:
-      - "${PORT_WEBMAIL:-8080}:80"
     environment:
       - ROUNDCUBEMAIL_DEFAULT_HOST=ssl://dovecot
       - ROUNDCUBEMAIL_DEFAULT_PORT=993
@@ -89,6 +87,21 @@ services:
     depends_on:
       - postfix
       - dovecot
+
+  nginx:
+    image: nginx:alpine
+    container_name: mail-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./ssl:/etc/ssl/mail:ro
+    networks:
+      - mail-net
+    depends_on:
+      - webmail
 
 volumes:
   mail-data:
