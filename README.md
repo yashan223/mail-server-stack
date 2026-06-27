@@ -22,33 +22,31 @@ A mail server stack (Postfix, Dovecot, OpenDKIM, Roundcube) orchestrated with Do
    ```bash
    docker compose up -d --build
    ```
-   *Roundcube Webmail will be accessible at: `http://localhost:8080`*
+   *Roundcube Webmail will be accessible at: `http://mail.example.com` (redirects to `https://mail.example.com` once SSL is set up)*
 
 ---
 
 ## SSL/TLS with Certbot (Let's Encrypt)
 
-To use Certbot on the host:
+The stack is pre-configured to dynamically load official Let's Encrypt certificates from the host VPS `/etc/letsencrypt` directory.
 
-1. **Generate Certificate**:
+To use Certbot:
+
+1. **Generate Certificate on the VPS Host**:
+   Stop any local web servers (so Certbot can bind to port 80) and run:
    ```bash
+   sudo systemctl stop nginx || true
+   sudo systemctl stop apache2 || true
    sudo certbot certonly --standalone -d mail.example.com
    ```
 
-2. **Update Volumes in `docker-compose.yml`**:
-   Replace the local `./ssl` volume mount with the Let's Encrypt paths in both the `postfix` and `dovecot` services:
-   ```yaml
-       volumes:
-         - mail-data:/var/mail
-         - dovecot-sockets:/var/run/dovecot
-         - /etc/letsencrypt/live/mail.example.com/fullchain.pem:/etc/ssl/mail/cert.pem:ro
-         - /etc/letsencrypt/live/mail.example.com/privkey.pem:/etc/ssl/mail/key.pem:ro
-   ```
+2. **Run Stack**:
+   Once the certificates are generated on the host, the containers will automatically read them on startup. No manual volume modifications are required.
 
 3. **Configure Auto-Reload**:
-   Add this deploy hook to `/etc/letsencrypt/cli.ini` (or pass as `--deploy-hook` to Certbot) to hot-reload services upon successful renewal:
+   Add this deploy hook to `/etc/letsencrypt/cli.ini` (or pass as `--deploy-hook` to Certbot) to hot-reload the mail containers upon successful renewal:
    ```ini
-   deploy-hook = docker compose -f /path/to/mail-server-stack/docker-compose.yml exec -T postfix postfix reload && docker compose -f /path/to/mail-server-stack/docker-compose.yml exec -T dovecot dovecot reload
+   deploy-hook = docker compose -f /path/to/mail-server-stack/docker-compose.yml exec -T postfix postfix reload && docker compose -f /path/to/mail-server-stack/docker-compose.yml exec -T dovecot dovecot reload && docker compose -f /path/to/mail-server-stack/docker-compose.yml exec -T nginx nginx -s reload
    ```
 
 ---
