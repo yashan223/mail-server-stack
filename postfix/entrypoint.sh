@@ -49,6 +49,7 @@ else
     postconf -e "smtpd_use_tls = yes"
 fi
 
+newaliases
 postfix check
 
 echo "Postfix configuration complete. Starting daemon..."

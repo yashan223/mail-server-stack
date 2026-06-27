@@ -58,11 +58,9 @@ add_user() {
     mkdir -p dovecot postfix
     touch dovecot/passwd postfix/virtual_users
 
-    if grep -q "^${email}:" dovecot/passwd; then
-        echo "User ${email} already exists. Updating password..."
-        sed -i.bak "/^${email}:/d" dovecot/passwd && rm -f dovecot/passwd.bak
-        sed -i.bak "/^${email}[[:space:]]/d" postfix/virtual_users && rm -f postfix/virtual_users.bak
-    fi
+    # Always prune existing entries to prevent duplicates
+    sed -i.bak "/^${email}:/d" dovecot/passwd 2>/dev/null && rm -f dovecot/passwd.bak || true
+    sed -i.bak "/^${email}[[:space:]]/d" postfix/virtual_users 2>/dev/null && rm -f postfix/virtual_users.bak || true
 
     echo "${email}:${hash}:5000:5000::/var/mail/vhosts/%d/%n" >> dovecot/passwd
     echo "${email}   dummy" >> postfix/virtual_users
