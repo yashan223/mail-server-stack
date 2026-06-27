@@ -2,7 +2,7 @@
 
 $config['db_dsnw'] = 'sqlite:////var/www/html/db/sqlite.db?mode=0666';
 
-$config['imap_host'] = 'dovecot:143';
+$config['imap_host'] = 'ssl://dovecot:993';
 
 $config['imap_conn_options'] = array(
     'ssl' => array(
@@ -12,7 +12,7 @@ $config['imap_conn_options'] = array(
     )
 );
 
-$config['smtp_host'] = 'postfix:587';
+$config['smtp_host'] = 'tls://postfix:587';
 
 $config['smtp_user'] = '%u';
 $config['smtp_pass'] = '%p';
