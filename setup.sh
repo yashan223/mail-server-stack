@@ -64,7 +64,7 @@ add_user() {
         sed -i.bak "/^${email}[[:space:]]/d" postfix/virtual_users && rm -f postfix/virtual_users.bak
     fi
 
-    echo "${email}:${hash}" >> dovecot/passwd
+    echo "${email}:${hash}:5000:5000::/var/mail/vhosts/%d/%n" >> dovecot/passwd
     echo "${email}   dummy" >> postfix/virtual_users
 
     echo "User ${email} successfully created/updated."
