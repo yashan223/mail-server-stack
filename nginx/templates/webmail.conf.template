@@ -1,13 +1,11 @@
 server {
     listen 80;
-    server_name mail.yashan.me;
+    server_name ${HOSTNAME};
 
-    # Certbot challenge path
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
     }
 
-    # Redirect all HTTP requests to HTTPS
     location / {
         return 301 https://$host$request_uri;
     }
@@ -15,11 +13,11 @@ server {
 
 server {
     listen 443 ssl;
-    server_name mail.yashan.me;
+    server_name ${HOSTNAME};
 
-    # SSL Certs mapped from ./ssl directory
-    ssl_certificate /etc/ssl/mail/cert.pem;
-    ssl_certificate_key /etc/ssl/mail/key.pem;
+    # Let's Encrypt active certificate paths
+    ssl_certificate /etc/letsencrypt/live/${HOSTNAME}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${HOSTNAME}/privkey.pem;
 
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers HIGH:!aNULL:!MD5;

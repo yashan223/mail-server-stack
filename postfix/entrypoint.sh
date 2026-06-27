@@ -12,7 +12,20 @@ postconf -e "myorigin = \$mydomain"
 postconf -e "mydestination = localhost.\$mydomain, localhost"
 
 SSL_DIR="/etc/ssl/mail"
-if [ -f "${SSL_DIR}/cert.pem" ] && [ -f "${SSL_DIR}/key.pem" ]; then
+LE_DIR="/etc/letsencrypt/live/${HOSTNAME}"
+
+if [ -f "${LE_DIR}/fullchain.pem" ] && [ -f "${LE_DIR}/privkey.pem" ]; then
+    echo "Found Let's Encrypt certificates in ${LE_DIR}. Symlinking to ${SSL_DIR}..."
+    mkdir -p "${SSL_DIR}"
+    rm -f "${SSL_DIR}/cert.pem" "${SSL_DIR}/key.pem"
+    ln -sf "${LE_DIR}/fullchain.pem" "${SSL_DIR}/cert.pem"
+    ln -sf "${LE_DIR}/privkey.pem" "${SSL_DIR}/key.pem"
+    
+    postconf -e "smtpd_tls_cert_file = ${SSL_DIR}/cert.pem"
+    postconf -e "smtpd_tls_key_file = ${SSL_DIR}/key.pem"
+    postconf -e "smtpd_tls_security_level = may"
+    postconf -e "smtpd_use_tls = yes"
+elif [ -f "${SSL_DIR}/cert.pem" ] && [ -f "${SSL_DIR}/key.pem" ]; then
     echo "Found SSL certificates in ${SSL_DIR}. Configuring Postfix to use them..."
     postconf -e "smtpd_tls_cert_file = ${SSL_DIR}/cert.pem"
     postconf -e "smtpd_tls_key_file = ${SSL_DIR}/key.pem"

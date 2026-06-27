@@ -21,6 +21,7 @@ services:
       - dovecot-sockets:/var/run/dovecot
       - ./ssl:/etc/ssl/mail
       - ./postfix/virtual_users:/etc/postfix/virtual_users
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     networks:
       - mail-net
     depends_on:
@@ -46,6 +47,7 @@ services:
       - dovecot-sockets:/var/run/dovecot
       - ./dovecot/passwd:/etc/dovecot/passwd
       - ./ssl:/etc/ssl/mail
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     networks:
       - mail-net
 
@@ -95,9 +97,13 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    environment:
+      - HOSTNAME=${HOSTNAME:-mail.example.com}
+      - NGINX_ENVSUBST_FILTER=HOSTNAME
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/templates:/etc/nginx/templates:ro
       - ./ssl:/etc/ssl/mail:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     networks:
       - mail-net
     depends_on:

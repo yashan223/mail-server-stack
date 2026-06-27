@@ -23,7 +23,15 @@ chown -R vmail:vmail /var/mail/vhosts
 chmod 770 /var/mail/vhosts
 
 SSL_DIR="/etc/ssl/mail"
-if [ -f "${SSL_DIR}/cert.pem" ] && [ -f "${SSL_DIR}/key.pem" ]; then
+LE_DIR="/etc/letsencrypt/live/${HOSTNAME}"
+
+if [ -f "${LE_DIR}/fullchain.pem" ] && [ -f "${LE_DIR}/privkey.pem" ]; then
+    echo "Found Let's Encrypt certificates in ${LE_DIR}. Symlinking to ${SSL_DIR}..."
+    mkdir -p "${SSL_DIR}"
+    rm -f "${SSL_DIR}/cert.pem" "${SSL_DIR}/key.pem"
+    ln -sf "${LE_DIR}/fullchain.pem" "${SSL_DIR}/cert.pem"
+    ln -sf "${LE_DIR}/privkey.pem" "${SSL_DIR}/key.pem"
+elif [ -f "${SSL_DIR}/cert.pem" ] && [ -f "${SSL_DIR}/key.pem" ]; then
     echo "Found SSL certificates in ${SSL_DIR}. Configuring Dovecot to use them..."
 else
     echo "WARNING: SSL certificates (cert.pem / key.pem) not found in ${SSL_DIR}."
