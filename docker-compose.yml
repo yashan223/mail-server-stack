@@ -75,6 +75,11 @@ services:
       - ROUNDCUBEMAIL_SMTP_SERVER=postfix
       - ROUNDCUBEMAIL_SMTP_PORT=587
       - ROUNDCUBEMAIL_DB_TYPE=sqlite
+    entrypoint: >
+      /bin/sh -c "
+      chown -R www-data:www-data /var/www/html/db &&
+      exec /docker-entrypoint.sh apache2-foreground
+      "
     volumes:
       - ./webmail/config.inc.php:/var/www/html/config/config.inc.php:ro
       - webmail-db:/var/www/html/db
