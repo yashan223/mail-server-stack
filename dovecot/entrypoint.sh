@@ -41,7 +41,7 @@ if [ ! -f "${PASSWD_FILE}" ]; then
     echo "Creating empty passwd file at ${PASSWD_FILE}..."
     touch "${PASSWD_FILE}"
 fi
-chown root:root "${PASSWD_FILE}"
+chown dovecot:dovecot "${PASSWD_FILE}"
 chmod 600 "${PASSWD_FILE}"
 
 mkdir -p /var/run/dovecot
